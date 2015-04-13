@@ -4,6 +4,9 @@ apply plugin: 'maven'
 
 mainClassName = hasProperty("mainClass") ? property("mainClass") : 'com.example.ClientExample';
 
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 repositories {
     mavenCentral()
 }
@@ -14,10 +17,44 @@ dependencies {
     compile group: 'io.netty', name: 'netty-all', version:'4.0.21.Final'
     compile group: 'org.fiware.kiara', name: 'KIARA', version: '0.2.0'
 }
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.example.ClientExample'
-        attributes 'Class-Path': 'kiara-0.2.0.jar commons-lang-2.6.jar slf4j-jdk14-1.7.7.jar slf4j-api-1.7.7.jar netty-all-4.0.21.Final.jar guava-17.0.jar'
+
+task serverJar(type: Jar) {
+    dependsOn configurations.runtime
+    baseName = 'ServerExample'
+    from (sourceSets.main.output) {
+        include "**"
     }
-    baseName = 'client_example'
+    from {
+        configurations.runtime.collect {
+          it.isDirectory() ? it : zipTree(it)
+        }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    manifest {
+      attributes("Main-Class": "com.example.ServerExample")
+    }
+}
+
+task clientJar(type: Jar) {
+    dependsOn configurations.runtime
+    baseName = 'ClientExample'
+    from (sourceSets.main.output) {
+        include "**"
+    }
+    from {
+        configurations.runtime.collect {
+          it.isDirectory() ? it : zipTree(it)
+        }
+
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    manifest {
+      attributes("Main-Class": "com.example.ClientExample")
+    }
 }
